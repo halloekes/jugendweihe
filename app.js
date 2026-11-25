@@ -104,7 +104,7 @@ function init(){
   const ics = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//jugendweihe//DE","BEGIN:VEVENT",
     `UID:jugendweihe-${CFG.dateISO}@${location.hostname || "local"}`,`DTSTAMP:${z(now())}`,`DTSTART:${z(start)}`,`DTEND:${z(end)}`,
     `SUMMARY:${title}`,`LOCATION:${where.replace(/,/g, "\\,")}`,`DESCRIPTION:${CFG.venueHint}`,
-    "BEGIN:VALARM","TRIGGER:-P1D","ACTION:DISPLAY","DESCRIPTION:Morgen ist die Party!","END:VALARM",
+    "BEGIN:VALARM","TRIGGER:-P7D","ACTION:DISPLAY","DESCRIPTION:In einer Woche ist die Party!","END:VALARM",
     "END:VEVENT","END:VCALENDAR"].join("\r\n");
   $$("[data-ics]").forEach(b => b.addEventListener("click", () => {
     const a = document.createElement("a");
