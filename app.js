@@ -182,7 +182,7 @@ function init(){
   Object.values(steppers).forEach(s => s.set(s.v));
   toggle();
 
-  const fields = ["name","hinweise","s1t","s1a","s2t","s2a","nachricht"];
+  const fields = ["name","hinweise","s1t","s1a","s2t","s2a","nachricht","email"];
   function collect(){
     const d = { k: CODE, id: store.get("jw_id") || "", kommt: kommt() };
     fields.forEach(f => d[f] = F[f].value.trim());
@@ -202,10 +202,11 @@ function init(){
     $$(".invalid", form).forEach(x => x.classList.remove("invalid"));
     const bad = [];
     if (!d.name) bad.push("name");
+    if (d.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) bad.push("email");
     if (d.kommt === "ja") ["s1t","s1a","s2t","s2a"].forEach(f => { if (!d[f]) bad.push(f); });
     bad.forEach(f => F[f].classList.add("invalid"));
     if (bad.length) {
-      showErr(bad.includes("name") ? "Bitte sagt uns, wer antwortet." : "Bitte nennt zwei Songs mit Titel und Interpret – die kommen auf die Party-Playlist!");
+      showErr(bad.includes("name") ? "Bitte sagt uns, wer antwortet." : bad.includes("email") ? "Die E-Mail-Adresse sieht nicht ganz richtig aus." : "Bitte nennt zwei Songs mit Titel und Interpret – die kommen auf die Party-Playlist!");
       F[bad[0]].focus();
     }
     return !bad.length;
@@ -275,8 +276,9 @@ function init(){
     $(".done-title").textContent = d.kommt === "ja" ? `Yay, ${first}! Ich freu mich auf ${d.personen > 1 ? "euch" : "dich"}.` : `Schade, ${first} – danke für die Rückmeldung!`;
     $(".done-text").textContent = (fresh ? "Eure Antwort ist angekommen. " : "Ihr habt schon geantwortet. ")
       + (d.kommt === "ja" ? `${d.personen} ${d.personen == 1 ? "Person" : "Personen"} · Songs: „${d.s1t}“ und „${d.s2t}“.` : "")
-      + " Speichert euch den Link unten, falls ihr später etwas ändern wollt.";
+      + (fresh && d.mailed ? ` Euren Änderungslink haben wir auch an ${d.email} geschickt.` : " Speichert euch den Link unten, falls ihr später etwas ändern wollt.");
     $("#edit-url").value = url;
+    $("#wa-edit").href = "https://wa.me/?text=" + encodeURIComponent(`Mein Link für ${CFG.name}s Jugendweihe-Party (zum Ändern meiner Antwort): ${url}`);
     $("#edit-again").hidden = closed;
   }
   $("#copy-edit").onclick = async () => {
@@ -296,7 +298,7 @@ function init(){
       const r = await api("POST", d);
       if (!r.ok) throw new Error(r.error || "Fehler");
       store.set("jw_id", r.id); store.set("jw_name", d.name);
-      showDone(d, true);
+      showDone({...d, mailed: r.mailed}, true);
       $("#rsvp").scrollIntoView({behavior:"smooth", block:"start"});
     } catch (err) {
       showErr(err.message === "closed" ? "Die Rückmeldefrist ist leider vorbei." : "Das hat nicht geklappt. Bitte versucht es gleich nochmal.");
