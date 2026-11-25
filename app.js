@@ -34,10 +34,10 @@ async function decrypt(code){
   const raw = await crypto.subtle.decrypt({name:"AES-GCM", iv:b64(p.iv)}, key, b64(p.ct));
   const text = p.z ? await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream("deflate"))).text() : new TextDecoder().decode(raw);
   const data = JSON.parse(text);
-  KEY = key;
+  KEY = data.mk ? await crypto.subtle.importKey("raw", b64(data.mk), "AES-GCM", false, ["decrypt"]) : key;
   return data;
 }
-// Fotos liegen verschlüsselt in media.json (selber Schlüssel), damit index.html klein bleibt.
+// Fotos liegen verschlüsselt in media.json (eigener Schlüssel aus dem Payload), damit index.html klein bleibt.
 async function loadMedia(){
   try {
     const m = await (await fetch("media.json", {cache: "no-cache"})).json();
